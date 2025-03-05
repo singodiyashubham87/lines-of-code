@@ -1,22 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Github } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import ResultsDisplay from '@/components/ResultsDisplay';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { useState } from "react";
+import { Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import ResultsDisplay from "@/components/ResultsDisplay";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-type AnalysisMode = 'all' | 'specific';
 
 export default function LOCAnalyzer() {
-  const [username, setUsername] = useState('');
-  const [repository, setRepository] = useState('');
-  const [branch, setBranch] = useState('main');
-  const [mode, setMode] = useState<AnalysisMode>('all');
+  const [username, setUsername] = useState("");
+  const [repository, setRepository] = useState("");
+  const [branch, setBranch] = useState("main");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<any>(null);
@@ -28,25 +25,17 @@ export default function LOCAnalyzer() {
     setResults(null);
 
     try {
-      const response = await fetch('/api/github', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          repository: mode === 'specific' ? repository : undefined,
-          branch,
-        }),
-      });
+      const response = await fetch(
+        `https://api.codetabs.com/v1/loc/?github=${username}/${repository}&branch=${branch}`
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch data');
+        throw new Error(data.error || "Failed to fetch data");
       }
 
-      setResults(data.data);
+      setResults(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -59,22 +48,6 @@ export default function LOCAnalyzer() {
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <RadioGroup
-              defaultValue="all"
-              value={mode}
-              onValueChange={(value) => setMode(value as AnalysisMode)}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="all" id="all" />
-                <Label htmlFor="all">All Public Repos</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="specific" id="specific" />
-                <Label htmlFor="specific">Specific Repo</Label>
-              </div>
-            </RadioGroup>
-
             <div className="space-y-4">
               <div>
                 <Label htmlFor="username">GitHub Username</Label>
@@ -87,7 +60,6 @@ export default function LOCAnalyzer() {
                 />
               </div>
 
-              {mode === 'specific' && (
                 <div>
                   <Label htmlFor="repository">Repository Name</Label>
                   <Input
@@ -95,12 +67,10 @@ export default function LOCAnalyzer() {
                     value={repository}
                     onChange={(e) => setRepository(e.target.value)}
                     placeholder="Enter repository name"
-                    required={mode === 'specific'}
+                    required={true}
                   />
                 </div>
-              )}
 
-              {mode === 'specific' && (
                 <div>
                   <Label htmlFor="branch">Branch Name</Label>
                   <Input
@@ -110,15 +80,10 @@ export default function LOCAnalyzer() {
                     placeholder="Enter branch name (defaults to main)"
                   />
                 </div>
-              )}
             </div>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <LoadingSpinner />
             ) : (
@@ -136,7 +101,7 @@ export default function LOCAnalyzer() {
           </div>
         )}
 
-        {results && <ResultsDisplay results={results} mode={mode} />}
+        {results && <ResultsDisplay results={results} />}
       </Card>
     </div>
   );
